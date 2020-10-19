@@ -140,8 +140,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
   for (auto& particle: particles)
   {
+    // Transform the observations to map coordinates
     vector<LandmarkObs> trans_observations;
-
     for (auto observation: observations)
     {
       LandmarkObs trans_obs;
@@ -153,6 +153,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       trans_observations.push_back(trans_obs);
     }
 
+    // create a list with the relevant landmarks (within the sensor range)
     std::vector<LandmarkObs> predicted_landmarks;
     for (auto landmark: map_landmarks.landmark_list)
     {
@@ -162,17 +163,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       }
     }
 
+    // for each of the observation associate the closest landmark
     dataAssociation(predicted_landmarks, trans_observations);
 
+    // Update the weights
     auto multi_prob = 1.0;
     for (auto observation: trans_observations)
     {
+      // landmark ids start with 1
       auto landmark = map_landmarks.landmark_list[observation.id-1];
-      if (observation.id == landmark.id_i)
-      {
-        auto prob = multiv_prob(std_landmark[0], std_landmark[1], observation.x, observation.y, landmark.x_f, landmark.y_f);
-        multi_prob *= prob;
-      }
+
+      multi_prob *= multiv_prob(std_landmark[0], std_landmark[1], observation.x, observation.y, landmark.x_f, landmark.y_f);
     }
 
     particle.weight = multi_prob;
