@@ -137,6 +137,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    };
 
   weights.clear();
+  auto weight_normalizer = 0.0;
 
   for (auto& particle: particles)
   {
@@ -176,9 +177,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       multi_prob *= multiv_prob(std_landmark[0], std_landmark[1], observation.x, observation.y, landmark.x_f, landmark.y_f);
     }
 
+    weight_normalizer += multi_prob;
     particle.weight = multi_prob;
-    weights.push_back(multi_prob);
+    //weights.push_back(multi_prob);
   }
+
+  for (auto& particle: particles)
+  {
+    particle.weight /= weight_normalizer;
+    weights.push_back(particle.weight);
+  }
+
 }
 
 void ParticleFilter::resample() {
